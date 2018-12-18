@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<title>
+	  Calendar
+	</title>
+
+<link rel="stylesheet" type="text/css" href="calStyle.css">
+
+</head>
+<body>
+	<!-- using this old  version of JQuery, bc it works w the dialog box-->
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+  <!-- <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+         rel = "stylesheet"> -->
+      <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+<script>
+function togglePasswordVisibility(){
+	let x = document.getElementById("password");
+	if (x.type === "password") {
+		x.type = "text";
+	} else {
+		x.type = "password";
+	}
+}
+
+function togglePasswordVisibility2(){
+	let x = document.getElementById("newPassword");
+	if (x.type === "password") {
+		x.type = "text";
+	} else {
+		x.type = "password";
+	}
+}
+</script>
+
+
+<div id='month'>
+</div>
+<div id='year'>
+</div>
+<br>
+<button id="previousMonth">Previous Month</button>
+<button id="nextMonth">Next Month</button>
+<br><br>
+
+<div id='monTuesWed'>
+	<p>Sunday</p>
+	<p>Monday</p>
+	<p>Tuesday</p>
+	<p>Wednesday</p>
+	<p>Thursday</p>
+	<p>Friday</p>
+	<p>Saturday</p>
+</div>
+
+<div id="big" class='big'>
+</div>
+
+<!-- <div id='dialog' hidden='hidden'>Dialog box</div> -->
+<div id='dialog' style = "display:none">Dialog box</div>
+
+
+<h1>Log In:</h1>
+<div id='logInArea'>
+	Username:<br>
+	<input type="text" name="username" id="username"/><br>
+	Password:<br>
+	<input type="password" name="password" id="password"><br>
+	<input type='checkbox' onclick='togglePasswordVisibility()'>Show Password<br>
+	<button id="submitLogIn">Log In</button>
+</div>
+<br><br><br><br><br>
+
+<h1>Create New Event:</h1>
+<div id='newEvent'>
+  Username:<br>
+	<input type="text" name="username" id="username1"/><br>
+	Password:<br>
+	<input type="password" name="password" id="password1"><br>
+	Event Name:<br>
+	<input type="text" name="name" id="name"/><br>
+	Event Location:<br>
+	<input type="text" name="loaction" id="location"><br>
+  Event Date:<br>
+	<input type="datetime-local" name="datetime" id="datetime"><br>
+	<label><input type="radio" name="cat" id="school">School</label><br>
+	<label><input type="radio" name="cat" id="home">Home</label><br>
+	<button id="submitEvent">Add Event</button>
+</div>
+<br><br><br><br>
+
+<h1>Sign Up:</h1>
+<div id='signUpArea'>
+	Username:<br>
+	<input type="text" name="newUsername" id="newUsername"/><br>
+	Password:<br>
+	<input type="password" name="newPassword" id="newPassword"><br>
+	<input type='checkbox' onclick='togglePasswordVisibility2()'>Show Password<br>
+	<button id="submitSignUp">Sign Up</button>
+</div>
+
+
+
+<script>
+
+// document.getElementById('myEvents').innerHTML = " <br><br>";
+let fullUserID = "";
+
+document.getElementById("submitSignUp").addEventListener("click", function(){
+	const newUsername = document.getElementById("newUsername").value;
+	const newPassword= document.getElementById("newPassword").value;
+	let all2 = {'newUsername':newUsername, 'newPassword':newPassword};
+
+
+	console.log(all2);
+	fetch('signUp.php', {
+		method: 'post',
+		body: JSON.stringify(all2),
+		headers: {
+		'Content-Type': 'application/json'
+		}
+	})
+	.then(res => res.json())
+    .then(response =>{
+		console.log('Success:', JSON.stringify(response))
+		// for(var key in response){
+		//
+		// }
+	})
+	.catch(err => console.log(err));
+	// updateCalendar();
+
+});
+
+	document.getElementById("submitLogIn").addEventListener("click", function(){
+		const username = document.getElementById("username").value;
+		const password= document.getElementById("password").value;
+		const all = {'username':username, 'password':password};
+		updateCalendar();
+  // fetch('logIn.php', {
+  //     method: 'post',
+  //     body: JSON.stringify(all),
+  //     headers: {
+  //       'Content-Type': 'application/json'
+  //      }
+  //   })
+  //   .then(res => res.json())
+  //   .then(response => console.log('Success:', JSON.stringify(response)))
+  //   .catch(err => console.log(err));
+
+  }
+);
+
+
+  document.getElementById("submitEvent").addEventListener("click", function(){
+    const username = document.getElementById("username1").value;
+	const password= document.getElementById("password1").value;
+	const name = document.getElementById("name").value;
+	const location= document.getElementById("location").value;
+    const datetime= document.getElementById("datetime").value;
+		const category_radio_pointers = document.getElementsByName("cat");
+	let category = '';
+	if(category_radio_pointers[0].checked){
+		category = 'school';
+	}else{
+		if(category_radio_pointers[1].checked){
+			category = 'home';
+		}
+	}
+	//note, i changed the below to let?
+	let newEvent = {'username':username, 'password':password, 'name':name, 'location':location, 'datetime':datetime, 'category': category};
+
+  	console.log(newEvent);
+  	fetch('submitEvent.php', {
+		method: 'post',
+		body: JSON.stringify(newEvent),
+		headers: {
+        'Content-Type': 'application/json'
+		}
+    })
+    .then(res => res.json())
+    .then(response =>{
+		console.log('Success:', JSON.stringify(response));
+		updateCalendar();
+	}
+	)
+    .catch(err => console.log(err));
+	// updateCalendar();
+  });
+
+
+
+
+//KENNY WHAT IS THIS? why is there a ( in front
+  (function () {
+	"use strict";
+
+	/* Date.prototype.deltaDays(n)
+	 *
+	 * Returns a Date object n days in the future.
+	 */
+	Date.prototype.deltaDays = function (n) {
+		// relies on the Date object to automatically wrap between months for us
+		return new Date(this.getFullYear(), this.getMonth(), this.getDate() + n);
+	};
+
+	/* Date.prototype.getSunday()
+	 *
+	 * Returns the Sunday nearest in the past to this date (inclusive)
+	 */
+	Date.prototype.getSunday = function () {
+		return this.deltaDays(-1 * this.getDay());
+	};
+}());
+
+
+/** Week
+ *
+ * Represents a week.
+ *
+ * Functions (Methods):
+ *	.nextWeek() returns a Week object sequentially in the future
+ *	.prevWeek() returns a Week object sequentially in the past
+ *	.contains(date) returns true if this week's sunday is the same
+ *		as date's sunday; false otherwise
+ *	.getDates() returns an Array containing 7 Date objects, each representing
+ *		one of the seven days in this month
+ */
+function Week(initial_d) {
+	"use strict";
+
+	this.sunday = initial_d.getSunday();
+
+
+	this.nextWeek = function () {
+		return new Week(this.sunday.deltaDays(7));
+	};
+
+	this.prevWeek = function () {
+		return new Week(this.sunday.deltaDays(-7));
+	};
+
+	this.contains = function (d) {
+		return (this.sunday.valueOf() === d.getSunday().valueOf());
+	};
+
+	this.getDates = function () {
+		var dates = [];
+		for(var i=0; i<7; i++){
+			dates.push(this.sunday.deltaDays(i));
+		}
+		return dates;
+	};
+}
+
+
+
+
+/** Month
+ *
+ * Represents a month.
+ *
+ * Properties:
+ *	.year == the year associated with the month
+ *	.month == the month number (January = 0)
+ *
+ * Functions (Methods):
+ *	.nextMonth() returns a Month object sequentially in the future
+ *	.prevMonth() returns a Month object sequentially in the past
+ *	.getDateObject(d) returns a Date object representing the date
+ *		d in the month
+ *	.getWeeks() returns an Array containing all weeks spanned by the
+ *		month; the weeks are represented as Week objects
+ */
+function Month(year, month){
+
+	"use strict";
+
+	this.year = year;
+	this.month = month;
+
+	this.nextMonth = function () {
+		return new Month( year + Math.floor((month+1)/12), (month+1) % 12);
+	};
+
+	this.prevMonth = function () {
+		return new Month( year + Math.floor((month-1)/12), (month+11) % 12);
+	};
+
+	this.getDateObject = function(d) {
+		return new Date(this.year, this.month, d);
+	};
+
+	this.getWeeks = function () {
+		var firstDay = this.getDateObject(1);
+		var lastDay = this.nextMonth().getDateObject(0);
+
+		var weeks = [];
+		var currweek = new Week(firstDay);
+		weeks.push(currweek);
+		while(!currweek.contains(lastDay)){
+			currweek = currweek.nextWeek();
+			weeks.push(currweek);
+		}
+
+		return weeks;
+    };
+}
+
+let currentMonth = new Month(2018, 9);
+updateCalendar();
+
+document.getElementById("nextMonth").addEventListener("click", function(){
+  currentMonth = currentMonth.nextMonth(); // Previous month would be currentMonth.prevMonth()
+	updateCalendar(); // Whenever the month is updated, we'll need to re-render the calendar in HTML
+}, false);
+document.getElementById("previousMonth").addEventListener("click", function(){
+  currentMonth = currentMonth.prevMonth(); // Previous month would be currentMonth.prevMonth()
+	updateCalendar(); // Whenever the month is updated, we'll need to re-render the calendar in HTML
+}, false);
+
+function updateCalendar(){
+	// console.log("hey");
+  let textMonth = '';
+  if(currentMonth.month==0){
+    textMonth = 'January';
+  } else{
+    if(currentMonth.month==1){
+      textMonth = 'February';
+    }else{
+      if(currentMonth.month==2){
+        textMonth = 'March';
+      }else{
+        if(currentMonth.month==3){
+          textMonth = 'April';
+        }else{
+          if(currentMonth.month==4){
+            textMonth = 'May';
+          }else{
+            if(currentMonth.month==5){
+              textMonth = 'June';
+            }else{
+              if(currentMonth.month==6){
+                textMonth = 'July';
+              }else{
+                if(currentMonth.month==7){
+                  textMonth = 'August';
+                }else{
+                  if(currentMonth.month==8){
+                    textMonth = 'September';
+                  }else{
+                    if(currentMonth.month==9){
+                      textMonth = 'October';
+                    }else{
+                      if(currentMonth.month==10){
+                        textMonth = 'November';
+                      }else{
+                        if(currentMonth.month==11){
+                          textMonth = 'December';
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  document.getElementById('month').innerHTML = textMonth +' '+currentMonth.year;
+
+
+  document.getElementById('big').innerHTML = "";
+
+	// if(document.getElementById("newUsername").value != null && document.getElementById("newPassword").value != null){
+	// 	console.log("not null!");
+	// 	console.log(document.getElementById("newUsername").value);
+	// }
+
+		const username = document.getElementById("username").value;
+		const password= document.getElementById("password").value;
+		const all = {'username':username, 'password':password};
+
+  fetch('login.php', {
+      method: 'post',
+     body: JSON.stringify(all),
+      headers: {
+        'Content-Type': 'application/json'
+       }
+    })
+    .then(res => res.json())
+    .then(response => {
+
+
+      var weeks = currentMonth.getWeeks();
+      for(var w in weeks){
+
+        var days = weeks[w].getDates();
+		// days contains normal JavaScript Date objects.
+
+          for(var d in days){
+            // You can see console.log() output in your JavaScript debugging tool, like Firebug,
+            // WebWit Inspector, or Dragonfly.
+            var day = document.createElement('BUTTON');
+            day.id = "a"+days[d].getUTCFullYear()+"_"+(days[d].getUTCMonth()+1)+"_"+days[d].getUTCDate(); //this is same as stored as date in database
+			day.classList.add("calButton");
+			console.log(day.id);
+
+
+            var num = document.createTextNode(days[d].getUTCDate());
+			// num.style.cssText = 'color:yellow';
+
+            day.appendChild(num);
+            document.getElementById('big').appendChild(day);
+
+            var dayEvents = document.createElement('div');
+			day.appendChild(dayEvents);
+			dayEvents.innerHTML= "";
+			let markup = " ";
+
+
+
+
+
+              for(var key in response){
+				  // console.log("this is working" + key);
+				  // console.log(response[key].day);
+
+				 fullUserID = response[key].userID;
+				 // console.log(fullUserID);
+                if(response[key].day==days[d].getUTCDate()&&response[key].month==days[d].getUTCMonth()+1 && response[key].year == days[d].getUTCFullYear()){
+					// for(response[key])
+					// console.log("1"+ days[d].getUTCFullYear());
+					// console.log("2"+response[key].year);
+
+					// document.getElementById('big').innerHTML = "";
+					// document.getElementById('myEvents').innerHTML = document.getElementById('myEvents').innerHTML + 'Event: ' + response[key].name + ' Location: ' + response[key].location + ' Date: ' + response[key].month+'/'+response[key].day + ' Time: ' + response[key].time
+					// + "<br><br>" ;
+
+					dayEvents.innerHTML = dayEvents.innerHTML +" " + response[key].name + "<br>"; //" event <br>"
+					if(response[key].category=='school'){
+						dayEvents.style.color='blue';
+					}else{
+						if(response[key].category=='home'){
+							dayEvents.style.color='red';
+						}else{
+							dayEvents.style.color='black';
+						}
+					}
+
+					markup = markup + '<br>Event: ' + response[key].name + '<br>Location: ' + response[key].location + '<br>Date: ' + response[key].month+'/'+response[key].day + '<br>Time: ' + response[key].time + "<br>";
+
+					//for every day append open function
+					document.getElementById(day.id).addEventListener("click", function() {
+					//				document.getElementById(day.id).visibility = "visible";
+						$("#dialog").dialog({
+							modal: true,
+							title: "Events",
+							open: function() {
+								//defined markup here last time... didn't work either. same thing
+							  $(this).html(markup);
+							},
+
+
+						})
+						$("#dialog").dialog("open");
+					});
+
+                  console.log("this is working");
+                  console.log(dayEvents);
+                }
+              }
+
+
+          }
+
+    }
+
+  })
+    .catch(err => console.log(err));
+
+
+}
+
+//ADAPTED FROM: https://www.w3schools.com/howto/howto_js_scroll_to_top.asp
+// When the user scrolls down 20px from the top of the document, show the button
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+    if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 20) {
+        document.getElementById("myBtn").style.display = "block";
+    } else {
+        document.getElementById("myBtn").style.display = "none";
+    }
+}
+
+// When the user clicks on the button, scroll to the top of the document
+function topFunction() {
+    document.body.scrollTop = 0; // For Safari
+    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+}
+// console.log("hey"+fullUserID);
+
+
+</script>
+<button onclick="topFunction()" id="myBtn" title="Go to top">Scroll to Top</button>

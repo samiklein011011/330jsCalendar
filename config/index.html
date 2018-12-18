@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>
+  Calendar
+</title>
+<link rel="stylesheet" type="text/css" href="calStyle.css">
+
+</head>
+<body>
+<div id='month'>
+</div>
+<div id='year'>
+</div>
+<button id="previous month">Previous Month</button>
+<button id="next month">Next Month</button>
+
+
+<div id="big" class='big'> 
+</div>
+
+
+
+
+<div id='logInArea'>
+	Username:<br>
+	<input type="text" name="username" id="username"/><br>
+	Password:<br>
+	<input type="text" name="password" id="password"><br>
+	<!--<input type='hidden' name='token' value='';echo $_SESSION['token']; echo"' />-->
+	<button id="submitLogIn">Log In</button>
+</div>
+
+
+<script>
+
+	document.getElementById("submitLogIn").addEventListener("click", function(){
+		const username = document.getElementById("username").value;
+		const password= document.getElementById("password").value;
+		const all = {'username':username, 'password':password};
+    
+  fetch('logIn.php', {
+      method: 'post',
+      body: JSON.stringify(all),
+      headers: {
+        'Content-Type': 'application/json'
+       }
+    })
+    .then(res => res.json())
+    .then(response => {
+      console.log(response)
+      for(var key in response){
+        console.log(typeof(response[key].time))
+      }})
+    .catch(err => console.log(err));
+  });
+    
+    
+    
+        
+//      const pathToPhpFile = 'http://ec2-18-223-135-24.us-east-2.compute.amazonaws.com/~kdorian/logIn.php';
+//fetch(pathToPhpFile, {
+//    method: "GET"
+//  })
+//.then(res => res.json())
+//.then(response => {
+//    console.log('Success:', response)});
+
+  (function () {
+	"use strict";
+
+	/* Date.prototype.deltaDays(n)
+	 * 
+	 * Returns a Date object n days in the future.
+	 */
+	Date.prototype.deltaDays = function (n) {
+		// relies on the Date object to automatically wrap between months for us
+		return new Date(this.getFullYear(), this.getMonth(), this.getDate() + n);
+	};
+
+	/* Date.prototype.getSunday()
+	 * 
+	 * Returns the Sunday nearest in the past to this date (inclusive)
+	 */
+	Date.prototype.getSunday = function () {
+		return this.deltaDays(-1 * this.getDay());
+	};
+}());
+
+
+/** Week
+ * 
+ * Represents a week.
+ * 
+ * Functions (Methods):
+ *	.nextWeek() returns a Week object sequentially in the future
+ *	.prevWeek() returns a Week object sequentially in the past
+ *	.contains(date) returns true if this week's sunday is the same
+ *		as date's sunday; false otherwise
+ *	.getDates() returns an Array containing 7 Date objects, each representing
+ *		one of the seven days in this month
+ */
+function Week(initial_d) {
+	"use strict";
+
+	this.sunday = initial_d.getSunday();
+		
+	
+	this.nextWeek = function () {
+		return new Week(this.sunday.deltaDays(7));
+	};
+	
+	this.prevWeek = function () {
+		return new Week(this.sunday.deltaDays(-7));
+	};
+	
+	this.contains = function (d) {
+		return (this.sunday.valueOf() === d.getSunday().valueOf());
+	};
+	
+	this.getDates = function () {
+		var dates = [];
+		for(var i=0; i<7; i++){
+			dates.push(this.sunday.deltaDays(i));
+		}
+		return dates;
+	};
+}
+
+
+
+
+/** Month
+ * 
+ * Represents a month.
+ * 
+ * Properties:
+ *	.year == the year associated with the month
+ *	.month == the month number (January = 0)
+ * 
+ * Functions (Methods):
+ *	.nextMonth() returns a Month object sequentially in the future
+ *	.prevMonth() returns a Month object sequentially in the past
+ *	.getDateObject(d) returns a Date object representing the date
+ *		d in the month
+ *	.getWeeks() returns an Array containing all weeks spanned by the
+ *		month; the weeks are represented as Week objects
+ */
+function Month(year, month){
+  
+	"use strict";
+	
+	this.year = year;
+	this.month = month;
+	
+	this.nextMonth = function () {
+		return new Month( year + Math.floor((month+1)/12), (month+1) % 12);
+	};
+	
+	this.prevMonth = function () {
+		return new Month( year + Math.floor((month-1)/12), (month+11) % 12);
+	};
+	
+	this.getDateObject = function(d) {
+		return new Date(this.year, this.month, d);
+	};
+	
+	this.getWeeks = function () {
+		var firstDay = this.getDateObject(1);
+		var lastDay = this.nextMonth().getDateObject(0);
+		
+		var weeks = [];
+		var currweek = new Week(firstDay);
+		weeks.push(currweek);
+		while(!currweek.contains(lastDay)){
+			currweek = currweek.nextWeek();
+			weeks.push(currweek);
+		}
+		
+		return weeks;
+    };
+}
+
+  
+let currentMonth = new Month(2018, 10);
+  
+document.getElementById("next month").addEventListener("click", function(){
+  currentMonth = currentMonth.nextMonth(); // Previous month would be currentMonth.prevMonth()
+	updateCalendar(); // Whenever the month is updated, we'll need to re-render the calendar in HTML
+}, false);
+document.getElementById("previous month").addEventListener("click", function(){
+  currentMonth = currentMonth.prevMonth(); // Previous month would be currentMonth.prevMonth()
+	updateCalendar(); // Whenever the month is updated, we'll need to re-render the calendar in HTML
+}, false);
+
+function updateCalendar(){
+  let textMonth = '';
+  if(currentMonth.month==0){
+    textMonth = 'January';
+  } else{
+    if(currentMonth.month==1){
+      textMonth = 'February';
+    }else{
+      if(currentMonth.month==2){
+        textMonth = 'March';
+      }else{
+        if(currentMonth.month==3){
+          textMonth = 'April';
+        }else{
+          if(currentMonth.month==4){
+            textMonth = 'May';
+          }else{
+            if(currentMonth.month==5){
+              textMonth = 'June';
+            }else{
+              if(currentMonth.month==6){
+                textMonth = 'July';
+              }else{
+                if(currentMonth.month==7){
+                  textMonth = 'August';
+                }else{
+                  if(currentMonth.month==8){
+                    textMonth = 'September';
+                  }else{
+                    if(currentMonth.month==9){
+                      textMonth = 'October';
+                    }else{
+                      if(currentMonth.month==10){
+                        textMonth = 'November';
+                      }else{
+                        if(currentMonth.month==11){
+                          textMonth = 'December';
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  document.getElementById('month').innerHTML = textMonth +' '+currentMonth.year;
+
+
+  document.getElementById('big').innerHTML = "";
+	var weeks = currentMonth.getWeeks();
+	
+	for(var w in weeks){
+		var days = weeks[w].getDates();
+		// days contains normal JavaScript Date objects.
+		
+		for(var d in days){
+			// You can see console.log() output in your JavaScript debugging tool, like Firebug,
+			// WebWit Inspector, or Dragonfly.
+      var day = document.createElement('div');
+      day.innerHTML = days[d].getUTCDate();
+      document.getElementById('big').appendChild(day);
+		}
+    
+	}
+		const username = document.getElementById("username").value;
+		const password= document.getElementById("password").value;
+		const all = {'username':username, 'password':password};
+    
+  fetch('logIn.php', {
+      method: 'post',
+     body: JSON.stringify(all),
+      headers: {
+        'Content-Type': 'application/json'
+       }
+    })
+    .then(res => res.json())
+    .then(response => {
+      console.log(username)
+     for(var key in response){
+        for(var d in days){
+          //if(response[key].month==currentMonth+1 && response[key].day==days[d]){
+            console.log(response[key].month, currentMonth+1)
+          }
+      }}})
+    .catch(err => console.log(err));
+
+
+}
+</script>
+
+</body>
+</html>
